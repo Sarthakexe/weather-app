@@ -6,11 +6,21 @@ import { useState } from 'react';
 function App() {
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState({});
+  const [error, setError] = useState('');
 
   const getWeatherbyCity = async () => {
     if (!city) return;
+
     const weatherData = await getWeather({ city });
-    setWeather(weatherData);
+
+    if (weatherData.error || weatherData.cod === '404') {
+      setError('City not found. Please try again.');
+      setWeather({});
+    } else {
+      setError('');
+      setWeather(weatherData);
+    }
+
     setCity('');
   };
 
@@ -32,7 +42,13 @@ function App() {
         </button>
       </div>
 
-      {hasWeather ? (
+      {error && (
+        <div className="content">
+          <h4 className="error">{error}</h4>
+        </div>
+      )}
+
+      {hasWeather && !error && (
         <div className="content">
           <div className="location d-flex">
             <MapPin />
@@ -40,6 +56,7 @@ function App() {
               {weather.name} <span>({weather.sys.country})</span>
             </h2>
           </div>
+
           <p className="datetext">{new Date().toLocaleDateString()}</p>
 
           <div className="weatherdesc">
@@ -52,10 +69,10 @@ function App() {
 
           <div className="tempstats d-flex flex-c">
             <h1>
-              {Math.round(weather.main.temp - 273.15)} <span>&deg;C</span>
+              {Math.round(weather.main.temp)} <span>&deg;C</span>
             </h1>
             <h3>
-              Feels Like {Math.round(weather.main.feels_like - 273.15)}{' '}
+              Feels Like {Math.round(weather.main.feels_like)}{' '}
               <span>&deg;C</span>
             </h3>
           </div>
@@ -67,14 +84,7 @@ function App() {
             </h3>
           </div>
         </div>
-      ) : Object.keys(weather).length > 0 ? (
-        <div className="content">
-          <h4>No Data found!</h4>
-        </div>
-      ) : null}
-
-      {/* Optional debug output */}
-      {/* <p>{JSON.stringify(weather)}</p> */}
+      )}
     </div>
   );
 }
